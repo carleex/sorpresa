@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Para ti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rose-deep:#a91457;
+    --rose-mid:#d94e85;
+    --rose-soft:#f3a9c4;
+    --ink:#4a1030;
+    --paper:#fffaf9;
+    --space-1:#05010a;
+    --space-2:#0d0420;
+    --neon-pink:#ff5ea8;
+    --neon-purple:#9b4dff;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    height:100%;
+    background:radial-gradient(ellipse at 50% 40%, var(--space-2) 0%, var(--space-1) 78%);
+    font-family:'Quicksand',sans-serif;
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .stage{ position:relative; width:100%; height:100%; }
+  .screen{
+    position:absolute; inset:0;
+    display:none;
+    align-items:center; justify-content:center;
+    flex-direction:column; text-align:center;
+    padding:6vw;
+    background:radial-gradient(ellipse at 50% 40%, var(--space-2) 0%, var(--space-1) 78%);
+  }
+  .screen.active{ display:flex; }
+
+  h1{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:600;
+    font-size:clamp(1.6rem, 4.4vw, 2.6rem);
+    line-height:1.25;
+    margin:0 0 2.4rem 0;
+    max-width:22ch;
+    color:#fff;
+    text-shadow:0 0 18px rgba(255,94,168,0.4), 0 0 40px rgba(155,77,255,0.2);
+  }
+
+  .buttons-row{
+    display:flex;
+    gap:2.6rem;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    min-height:120px;
+    max-width:90vw;
+  }
+
+  button.pill{
+    font-family:'Quicksand',sans-serif;
+    font-weight:600;
+    font-size:1.05rem;
+    padding:0.85em 2.1em;
+    border-radius:999px;
+    border:2px solid var(--rose-deep);
+    cursor:pointer;
+    letter-spacing:0.01em;
+    transition:transform .25s cubic-bezier(.3,.6,.3,1.4), box-shadow .2s ease;
+  }
+  button.pill:active{ transform:scale(0.96); }
+
+  .btn-yes{
+    background:var(--rose-deep);
+    color:var(--paper);
+    box-shadow:0 6px 18px rgba(169,20,87,0.28);
+    z-index:1;
+  }
+  .btn-yes:hover{ box-shadow:0 8px 22px rgba(169,20,87,0.38); }
+
+  .btn-no{
+    background:var(--paper);
+    color:var(--rose-mid);
+    transform-origin:center;
+    position:relative;
+  }
+  .btn-no.shake{ animation:shake .35s ease; }
+  @keyframes shake{
+    0%,100%{ }
+    20%{ transform:translateX(-6px) rotate(-2deg) scale(var(--gs,1)); }
+    40%{ transform:translateX(6px) rotate(2deg) scale(var(--gs,1)); }
+    60%{ transform:translateX(-4px) scale(var(--gs,1)); }
+    80%{ transform:translateX(4px) scale(var(--gs,1)); }
+  }
+
+  .reto-text{
+    margin-top:2.2rem;
+    font-size:0.92rem;
+    color:var(--neon-pink);
+    max-width:36ch;
+    min-height:1.6em;
+    opacity:0.95;
+  }
+
+  /* ---------- Tunel / agujero de gusano ---------- */
+  #screen-swirl{ padding:0; }
+  .tunnel{
+    position:absolute; inset:0;
+    overflow:hidden;
+  }
+  .tunnel-scale{
+    position:absolute; inset:0;
+    transform-origin:50% 50%;
+    will-change:transform;
+  }
+  .particles-layer, .phrases-layer{
+    position:absolute; inset:0;
+    pointer-events:none;
+  }
+
+  .wparticle{
+    position:absolute; top:0; left:0;
+    border-radius:50%;
+    background:var(--neon-pink);
+    box-shadow:0 0 8px 2px rgba(255,94,168,0.85);
+  }
+
+  .phrase{
+    position:absolute; top:0; left:0;
+    white-space:nowrap;
+    font-family:'Cormorant Garamond',serif;
+    font-weight:600;
+    font-size:1.05rem;
+    color:var(--neon-pink);
+    text-shadow:0 0 6px rgba(255,94,168,0.85), 0 0 16px rgba(255,94,168,0.4);
+  }
+  .phrase.cta{
+    color:#fff;
+    font-size:1.3rem;
+    text-shadow:0 0 10px rgba(255,94,168,1), 0 0 26px rgba(255,94,168,0.7);
+    cursor:pointer;
+    pointer-events:auto;
+    opacity:0;
+    transition:opacity 1s ease;
+    animation:pulseCta 1.8s ease-in-out infinite;
+  }
+  .phrase.cta.show{ opacity:1; }
+  @keyframes pulseCta{ 0%,100%{ filter:brightness(1);} 50%{ filter:brightness(1.35);} }
+
+  /* Corazon: el final del tunel */
+  .heart-wrap{
+    position:absolute;
+    left:50%; top:50%;
+    width:180px; height:164px;
+    transform:translate(-50%,-50%);
+    animation:heartBeat 2.4s ease-in-out infinite;
+    z-index:2;
+  }
+  @keyframes heartBeat{
+    0%,100%{ transform:translate(-50%,-50%) scale(1); }
+    50%{ transform:translate(-50%,-50%) scale(1.06); }
+  }
+  .heart-photo{
+    position:relative;
+    width:100%; height:100%;
+    clip-path:url(#heartClip);
+    background:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    cursor:pointer;
+    filter:drop-shadow(0 0 26px rgba(255,94,168,0.75)) drop-shadow(0 0 55px rgba(155,77,255,0.4));
+  }
+  .heart-photo img{
+    position:absolute;
+    inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    object-position:center;
+    display:none;
+    opacity:0;
+    transition:opacity .9s ease;
+  }
+  .heart-photo.revealed img{ opacity:1; }
+  .heart-photo .placeholder{
+    position:relative;
+    z-index:1;
+    font-size:0.72rem; color:var(--rose-mid);
+    padding:0 2.2em; line-height:1.4;
+    transition:opacity .4s ease;
+  }
+  .heart-photo.revealed .placeholder{ opacity:0; }
+
+  .explore-hint{
+    position:absolute; top:5%; left:50%;
+    transform:translateX(-50%);
+    font-size:0.82rem;
+    color:rgba(255,255,255,0.55);
+    pointer-events:none;
+    z-index:3;
+  }
+
+  .final-lines p{ margin:0.35rem 0; font-size:clamp(1rem, 2.6vw, 1.2rem); color:#fff; }
+  .final-lines p.big{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:600;
+    font-size:clamp(1.4rem, 3.6vw, 1.9rem);
+    margin-bottom:1rem;
+    color:#fff;
+    text-shadow:0 0 18px rgba(255,94,168,0.4);
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <clipPath id="heartClip" clipPathUnits="objectBoundingBox">
+      <path d="M0.5,1 C0.5,1 0,0.6207 0,0.310345 C0,0.137931 0.125,0 0.28125,0 C0.375,0 0.46875,0.068966 0.5,0.172414 C0.53125,0.068966 0.625,0 0.71875,0 C0.875,0 1,0.137931 1,0.310345 C1,0.620690 0.5,1 0.5,1 Z"></path>
+    </clipPath>
+  </defs>
+</svg>
+
+<div class="stage" id="stage">
+
+  <!-- Pantalla 1: menu -->
+  <div class="screen active" id="screen-menu">
+    <h1>¿Quieres ver lo que hay dentro?</h1>
+    <div class="buttons-row">
+      <button class="pill btn-yes" id="btn-yes-1">Sí</button>
+      <button class="pill btn-no" id="btn-no-1">No</button>
+    </div>
+  </div>
+
+  <!-- Pantalla 2: tunel -->
+  <div class="screen" id="screen-swirl">
+    <p class="explore-hint">acércate con zoom (rueda / pellizco) para avanzar por el túnel</p>
+    <div class="tunnel" id="tunnel">
+      <div class="tunnel-scale" id="tunnel-scale">
+        <div class="particles-layer" id="particles-layer"></div>
+        <div class="phrases-layer" id="phrases-layer"></div>
+        <div class="heart-wrap">
+          <div class="heart-photo" id="heart-photo">
+            <span class="placeholder" id="photo-placeholder">su foto va aquí<br>(se pone en el código)</span>
+            <img id="photo-img" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 3: pregunta -->
+  <div class="screen" id="screen-question">
+    <h1>¿Quieres salir conmigo,<br>tú y yo, mañana en la tarde?</h1>
+    <div class="buttons-row">
+      <button class="pill btn-yes" id="btn-yes-2">Sí</button>
+      <button class="pill btn-no" id="btn-no-2">No</button>
+    </div>
+    <p class="reto-text" id="reto-text">&nbsp;</p>
+  </div>
+
+  <!-- Pantalla 4: final -->
+  <div class="screen" id="screen-final">
+    <div class="final-lines">
+      <p class="big">Gracias, te veo el viernes en la tarde 💕🌸</p>
+      <p><strong>Lugar:</strong> El Portal</p>
+      <p><strong>Plan:</strong> tomar un café y ver qué podemos hacer</p>
+      <p><strong>Hora:</strong> 15:00</p>
+      <p><strong>Transporte:</strong> Me ofrezco a dejarte a tu casa.</p>
+      <p><strong>Notas:</strong> Trae tu mejor sonrisa 😊</p>
+      <p><strong>Recordatorio:</strong> No olvides tu mejor actitud 😄</p>
+      <p><strong>Consejo:</strong> Ven con buena energía ✨</p>
+      <p><strong>Sugerencia:</strong> Si no puedes por que trabajas, avísame con tiempo y no ilusionarme</p>
+      <p><strong>Final:</strong> BESOS</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // =========================================================
+  // FOTO: coloca el archivo "ella.jpeg" en la misma carpeta
+  // que este archivo html. Si prefieres otro nombre o base64,
+  // cambia el valor de FOTO_SRC.
+  // =========================================================
+  const FOTO_SRC = "ella.jpeg";
+
+  const photoImg = document.getElementById('photo-img');
+  const photoPlaceholder = document.getElementById('photo-placeholder');
+  const heartPhoto = document.getElementById('heart-photo');
+  let fotoLista = false;
+
+  if(FOTO_SRC){
+    photoPlaceholder.innerHTML = 'toca el corazón<br>para verla';
+    photoImg.src = FOTO_SRC;
+    photoImg.onload = () => {
+      photoImg.style.display = 'block';
+      fotoLista = true;
+    };
+    photoImg.onerror = () => {
+      photoImg.style.display = 'none';
+      fotoLista = false;
+    };
+  }
+
+  heartPhoto.addEventListener('click', () => {
+    if(!fotoLista) return;
+    heartPhoto.classList.toggle('revealed');
+  });
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ---------- Al presionar "No", el "Sí" se hace mas grande ----------
+  function makeNoGrowsYes(noBtn, yesBtn, opts){
+    opts = opts || {};
+    let clicks = 0;
+    noBtn.addEventListener('click', () => {
+      clicks++;
+      const scale = Math.min(1 + clicks * 0.4, 4.2);
+      yesBtn.style.setProperty('--gs', scale);
+      yesBtn.style.transform = 'scale(' + scale + ')';
+      yesBtn.style.zIndex = 5;
+      noBtn.classList.remove('shake');
+      void noBtn.offsetWidth;
+      noBtn.classList.add('shake');
+      if(opts.onClick) opts.onClick(clicks);
+    });
+  }
+
+  makeNoGrowsYes(document.getElementById('btn-no-1'), document.getElementById('btn-yes-1'));
+
+  const RETOS = [
+    "Tendrías que mandarme un video haciendo una triple voltereta hacia atrás",
+    "Tendrías que aprenderte el abecedario al revés en 5 segundos",
+    "Tendrías que ganarle una carrera a un guepardo",
+    "Tendrías que hacer 100 lagartijas seguidas sin parar",
+    "Tendrías que tocar el cielo con la mano",
+    "Tendrías que convencer a un gato de bañarse feliz",
+    "Tendrías que contar todas las estrellas de este universo"
+  ];
+  const retoText = document.getElementById('reto-text');
+  makeNoGrowsYes(document.getElementById('btn-no-2'), document.getElementById('btn-yes-2'), {
+    onClick: (n) => { retoText.textContent = RETOS[(n - 1) % RETOS.length]; }
+  });
+
+  // ---------- Flujo de pantallas ----------
+  document.getElementById('btn-yes-1').addEventListener('click', () => {
+    showScreen('screen-swirl');
+    startTunnel();
+  });
+  document.getElementById('btn-yes-2').addEventListener('click', () => {
+    showScreen('screen-final');
+  });
+
+  // ---------- Tunel: zoom para avanzar ----------
+  const tunnel = document.getElementById('tunnel');
+  const tunnelScale = document.getElementById('tunnel-scale');
+  let zoom = 0.6;
+
+  function applyZoom(){
+    tunnelScale.style.transform = 'scale(' + zoom + ')';
+  }
+  applyZoom();
+
+  tunnel.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoom = Math.min(6, Math.max(0.45, zoom - e.deltaY * 0.0018));
+    applyZoom();
+  }, { passive:false });
+
+  let isPinching = false, pinchStartDist = 0, pinchStartZoom = 1;
+  function touchDist(t1, t2){ return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY); }
+  tunnel.addEventListener('touchstart', e => {
+    if(e.touches.length === 2){
+      isPinching = true;
+      pinchStartDist = touchDist(e.touches[0], e.touches[1]);
+      pinchStartZoom = zoom;
+    }
+  }, { passive:true });
+  tunnel.addEventListener('touchmove', e => {
+    if(isPinching && e.touches.length === 2){
+      e.preventDefault();
+      const d = touchDist(e.touches[0], e.touches[1]);
+      zoom = Math.min(6, Math.max(0.45, pinchStartZoom * (d / pinchStartDist)));
+      applyZoom();
+    }
+  }, { passive:false });
+  tunnel.addEventListener('touchend', e => {
+    if(e.touches.length < 2) isPinching = false;
+  });
+  tunnel.addEventListener('dblclick', () => { zoom = 0.6; applyZoom(); });
+
+  // ---------- Particulas rosas fluyendo desde el centro hacia afuera ----------
+  let particles = [];
+  function buildParticles(){
+    const layer = document.getElementById('particles-layer');
+    layer.innerHTML = '';
+    particles = [];
+    for(let i=0;i<130;i++){
+      const el = document.createElement('div');
+      el.className = 'wparticle';
+      layer.appendChild(el);
+      particles.push({
+        el,
+        angle: Math.random() * Math.PI * 2,
+        radius: Math.random() * 400,
+        speed: 90 + Math.random() * 200
+      });
+    }
+  }
+
+  function updateParticles(dt, maxR){
+    particles.forEach(p => {
+      p.radius += p.speed * dt;
+      if(p.radius > maxR){
+        p.radius = 5 + Math.random() * 30;
+        p.angle = Math.random() * Math.PI * 2;
+        p.speed = 90 + Math.random() * 200;
+      }
+      const x = CX + Math.cos(p.angle) * p.radius;
+      const y = CY + Math.sin(p.angle) * p.radius;
+      const t = p.radius / maxR;
+      const size = 1.5 + t * 4.5;
+      const fadeOut = t > 0.85 ? Math.max(0, (1 - t) / 0.15) : 1;
+      const fadeIn = p.radius < 40 ? p.radius / 40 : 1;
+      p.el.style.width = size + 'px';
+      p.el.style.height = size + 'px';
+      p.el.style.opacity = Math.min(fadeOut, fadeIn);
+      p.el.style.transform = 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%)';
+    });
+  }
+
+  // ---------- Frases apareciendo y alejandose hacia afuera ----------
+  const FRASES = [
+    "Hoy estás muy linda",
+    "Me encantas",
+    "Perdón si te molesto",
+    "tenes unos ojos hermosos",
+    "te extraño mucho",
+    "Eres muy especial",
+    "Me gusta hablar contigo",
+    "Ojalá te guste mi sorpresa",
+    "Eres increíble",
+    "Me haces muy feliz",
+    "Eres mi persona favorita",
+    "Siempre pienso en ti",
+    "No puedo dejar de pensar en ti",
+    "Eres lo mejor que me ha pasado",
+    "No hay nadie como tú",
+    "Eres mi niña",
+    "Eres mi princesa",
+    "Eres mi reina",
+    "te quiero",
+    "te admiro",
+    "me importas mucho",
+    "mi enana favorita",
+    "mi deportista favorita",
+    "Eres una gran persona",
+    "Quiero pensar que eres todo para mi",
+    "Siempre estaré aquí para ti"
+  ];
+
+  let phraseSlots = [];
+  let ctaSlot = null;
+  let ctaShown = false;
+
+  function buildPhrases(){
+    const layer = document.getElementById('phrases-layer');
+    layer.innerHTML = '';
+    phraseSlots = [];
+    for(let i=0;i<20;i++){
+      const el = document.createElement('div');
+      el.className = 'phrase';
+      el.textContent = FRASES[Math.floor(Math.random()*FRASES.length)];
+      layer.appendChild(el);
+      phraseSlots.push({
+        el,
+        angle: Math.random() * Math.PI * 2,
+        radius: Math.random() * 500,
+        speed: 90 + Math.random() * 90
+      });
+    }
+
+    const cta = document.createElement('div');
+    cta.className = 'phrase cta';
+    cta.textContent = 'quiero decirte algo';
+    layer.appendChild(cta);
+    ctaSlot = { el: cta, angle: -0.6, radius: 40, speed: 30 };
+    cta.addEventListener('click', () => showScreen('screen-question'));
+    setTimeout(() => { ctaShown = true; cta.classList.add('show'); }, 3500);
+  }
+
+  function updatePhrases(dt, maxR){
+    phraseSlots.forEach(p => {
+      p.radius += p.speed * dt;
+      if(p.radius > maxR){
+        p.radius = 5 + Math.random() * 20;
+        p.angle = Math.random() * Math.PI * 2;
+        p.speed = 90 + Math.random() * 90;
+        p.el.textContent = FRASES[Math.floor(Math.random()*FRASES.length)];
+      }
+      const x = CX + Math.cos(p.angle) * p.radius;
+      const y = CY + Math.sin(p.angle) * p.radius;
+      const t = p.radius / maxR;
+      const fadeOut = t > 0.8 ? Math.max(0, (1 - t) / 0.2) : 1;
+      const fadeIn = p.radius < 60 ? p.radius / 60 : 1;
+      p.el.style.opacity = Math.min(fadeOut, fadeIn);
+      p.el.style.fontSize = (0.85 + t * 0.55) + 'rem';
+      p.el.style.transform = 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%)';
+    });
+
+    if(ctaSlot){
+      ctaSlot.radius += ctaSlot.speed * dt;
+      if(ctaSlot.radius > maxR * 0.75){
+        ctaSlot.radius = 30;
+        ctaSlot.angle = Math.random() * Math.PI * 2;
+      }
+      const x = CX + Math.cos(ctaSlot.angle) * ctaSlot.radius;
+      const y = CY + Math.sin(ctaSlot.angle) * ctaSlot.radius;
+      ctaSlot.el.style.transform = 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%)';
+    }
+  }
+
+  // ---------- Bucle principal ----------
+  let CX = 0, CY = 0, lastTime = null, tunnelStarted = false;
+
+  function measure(){
+    CX = tunnel.clientWidth / 2;
+    CY = tunnel.clientHeight / 2;
+  }
+  window.addEventListener('resize', measure);
+
+  function startTunnel(){
+    if(tunnelStarted) return;
+    tunnelStarted = true;
+    measure();
+    buildParticles();
+    buildPhrases();
+    requestAnimationFrame(tick);
+  }
+
+  function tick(t){
+    if(lastTime === null) lastTime = t;
+    const dt = Math.min((t - lastTime) / 1000, 0.05);
+    lastTime = t;
+    const maxR = Math.max(CX, CY) * 1.15;
+    updateParticles(dt, maxR);
+    updatePhrases(dt, maxR);
+    requestAnimationFrame(tick);
+  }
+
+})();
+</script>
+</body>
+</html>
