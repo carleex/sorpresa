@@ -124,9 +124,12 @@
 
   .wparticle{
     position:absolute; top:0; left:0;
+    width:6px; height:6px;
+    margin:-3px 0 0 -3px;
     border-radius:50%;
     background:var(--neon-pink);
-    box-shadow:0 0 8px 2px rgba(255,94,168,0.85);
+    box-shadow:0 0 5px 1px rgba(255,94,168,0.85);
+    will-change:transform, opacity;
   }
 
   .phrase{
@@ -137,6 +140,7 @@
     font-size:1.05rem;
     color:var(--neon-pink);
     text-shadow:0 0 6px rgba(255,94,168,0.85), 0 0 16px rgba(255,94,168,0.4);
+    will-change:transform, opacity;
   }
   .phrase.cta{
     color:#fff;
@@ -158,6 +162,7 @@
     width:180px; height:164px;
     transform:translate(-50%,-50%);
     animation:heartBeat 2.4s ease-in-out infinite;
+    will-change:transform;
     z-index:2;
   }
   @keyframes heartBeat{
@@ -265,16 +270,10 @@
   <!-- Pantalla 4: final -->
   <div class="screen" id="screen-final">
     <div class="final-lines">
-      <p class="big">Gracias, te veo el viernes en la tarde 💕🌸</p>
+      <p class="big">Gracias, te veo el viernes en la tarde 🌸</p>
       <p><strong>Lugar:</strong> El Portal</p>
       <p><strong>Plan:</strong> tomar un café y ver qué podemos hacer</p>
-      <p><strong>Hora:</strong> 15:00</p>
-      <p><strong>Transporte:</strong> Me ofrezco a dejarte a tu casa.</p>
-      <p><strong>Notas:</strong> Trae tu mejor sonrisa 😊</p>
-      <p><strong>Recordatorio:</strong> No olvides tu mejor actitud 😄</p>
-      <p><strong>Consejo:</strong> Ven con buena energía ✨</p>
-      <p><strong>Sugerencia:</strong> Si no puedes por que trabajas, avísame con tiempo y no ilusionarme</p>
-      <p><strong>Final:</strong> BESOS</p>
+      <p>Me ofrezco a dejarte a tu casa.</p>
     </div>
   </div>
 
@@ -403,7 +402,7 @@
     const layer = document.getElementById('particles-layer');
     layer.innerHTML = '';
     particles = [];
-    for(let i=0;i<130;i++){
+    for(let i=0;i<90;i++){
       const el = document.createElement('div');
       el.className = 'wparticle';
       layer.appendChild(el);
@@ -427,13 +426,11 @@
       const x = CX + Math.cos(p.angle) * p.radius;
       const y = CY + Math.sin(p.angle) * p.radius;
       const t = p.radius / maxR;
-      const size = 1.5 + t * 4.5;
+      const scale = 0.35 + t * 1;
       const fadeOut = t > 0.85 ? Math.max(0, (1 - t) / 0.15) : 1;
       const fadeIn = p.radius < 40 ? p.radius / 40 : 1;
-      p.el.style.width = size + 'px';
-      p.el.style.height = size + 'px';
       p.el.style.opacity = Math.min(fadeOut, fadeIn);
-      p.el.style.transform = 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%)';
+      p.el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + scale + ')';
     });
   }
 
@@ -475,7 +472,7 @@
     const layer = document.getElementById('phrases-layer');
     layer.innerHTML = '';
     phraseSlots = [];
-    for(let i=0;i<20;i++){
+    for(let i=0;i<14;i++){
       const el = document.createElement('div');
       el.className = 'phrase';
       el.textContent = FRASES[Math.floor(Math.random()*FRASES.length)];
@@ -511,9 +508,9 @@
       const t = p.radius / maxR;
       const fadeOut = t > 0.8 ? Math.max(0, (1 - t) / 0.2) : 1;
       const fadeIn = p.radius < 60 ? p.radius / 60 : 1;
+      const scale = 0.8 + t * 0.55;
       p.el.style.opacity = Math.min(fadeOut, fadeIn);
-      p.el.style.fontSize = (0.85 + t * 0.55) + 'rem';
-      p.el.style.transform = 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%)';
+      p.el.style.transform = 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%) scale(' + scale + ')';
     });
 
     if(ctaSlot){
